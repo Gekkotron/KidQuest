@@ -23,4 +23,20 @@
     <string name="child_restore">Rétablir</string>
     <string name="child_redeemed">🎁 %1$s</string>
     <string name="back">Retour</string>
+    <string name="goals_tab_active">En cours</string>
+    <string name="goals_tab_achieved">Atteints</string>
+    <string name="goals_tab_redeemed">Échangés</string>
+    <string name="goals_new">Nouvel objectif</string>
+    <string name="goals_empty">Rien pour l’instant</string>
+    <string name="goals_redeem">Échanger</string>
+    <string name="goal_title">Titre</string>
+    <string name="goal_cost">Coût (points)</string>
+    <string name="goal_members">Qui économise pour cet objectif ?</string>
+    <string name="goal_edit_title">Modifier l’objectif</string>
+    <string name="redeem_title">Échanger %1$s</string>
+    <string name="redeem_total">Total : %1$d / %2$d</string>
+    <string name="restart_title">Recommencer ?</string>
+    <string name="restart_body">Recréer le même objectif pour les mêmes enfants ?</string>
+    <string name="restart_yes">Recommencer</string>
+    <string name="restart_no">Plus tard</string>
 </resources>

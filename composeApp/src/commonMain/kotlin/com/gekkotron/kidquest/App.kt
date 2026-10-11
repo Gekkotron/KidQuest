@@ -31,8 +31,11 @@ import com.gekkotron.kidquest.resources.tab_home
 import com.gekkotron.kidquest.resources.tab_settings
 import com.gekkotron.kidquest.ui.locale.AppEnvironment
 import com.gekkotron.kidquest.ui.child.ChildDetailScreen
+import com.gekkotron.kidquest.ui.goals.GoalEditScreen
+import com.gekkotron.kidquest.ui.goals.GoalsScreen
 import com.gekkotron.kidquest.ui.home.HomeScreen
 import com.gekkotron.kidquest.ui.nav.ChildDetailRoute
+import com.gekkotron.kidquest.ui.nav.GoalEditRoute
 import com.gekkotron.kidquest.ui.nav.GoalsRoute
 import com.gekkotron.kidquest.ui.nav.HomeRoute
 import com.gekkotron.kidquest.ui.nav.SettingsRoute
@@ -59,7 +62,12 @@ fun App() {
                         composable<HomeRoute> {
                             HomeScreen(snackbarHostState, onOpenChild = { nav.navigate(ChildDetailRoute(it)) })
                         }
-                        composable<GoalsRoute> { Placeholder("screen-goals") }
+                        composable<GoalsRoute> {
+                            GoalsScreen(onNew = { nav.navigate(GoalEditRoute()) }, onEdit = { nav.navigate(GoalEditRoute(it)) })
+                        }
+                        composable<GoalEditRoute> { entry ->
+                            GoalEditScreen(entry.toRoute<GoalEditRoute>().goalId, onDone = { nav.popBackStack() })
+                        }
                         composable<SettingsRoute> { Placeholder("screen-settings") }
                         composable<ChildDetailRoute> { entry ->
                             val route = entry.toRoute<ChildDetailRoute>()

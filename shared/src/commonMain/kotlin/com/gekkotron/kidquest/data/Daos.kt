@@ -67,6 +67,9 @@ interface GoalDao {
     @Query("DELETE FROM goal_member WHERE goalId = :goalId") suspend fun deleteMembers(goalId: Long)
     @Query("SELECT childId FROM goal_member WHERE goalId = :goalId") suspend fun memberIds(goalId: Long): List<Long>
 
+    @Query("SELECT * FROM goal WHERE status IN ('ACTIVE', 'ACHIEVED')")
+    suspend fun openGoals(): List<Goal>
+
     @Query(
         """SELECT * FROM goal WHERE status IN ('ACTIVE', 'ACHIEVED')
            AND id IN (SELECT goalId FROM goal_member WHERE childId IN (:childIds))"""

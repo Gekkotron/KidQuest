@@ -13,6 +13,10 @@ data class GoalSummary(
     val goal: Goal,
     /** Ordered by child creation (oldest first). */
     val members: List<Child>,
-    val contributed: Int,
+    /** Same order as [members]. */
+    val memberProgress: List<MemberProgress>,
+    /** Mean of the member progresses. */
     val progress: Float,
 )
+
+data class MemberProgress(val childId: Long, val balance: Int, val progress: Float)

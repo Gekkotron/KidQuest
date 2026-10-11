@@ -132,11 +132,23 @@ private fun GoalsStrip(goals: List<GoalSummary>) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("${g.goal.icon} ${g.goal.title}", maxLines = 1, fontWeight = FontWeight.SemiBold)
                     GoalProgressBar(g.progress)
+                    if (g.members.size > 1) {
+                        val kids = g.members.associateBy { it.id }
+                        g.memberProgress.forEach { m ->
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(kids[m.childId]?.avatar.orEmpty(), style = MaterialTheme.typography.labelSmall)
+                                GoalProgressBar(m.progress, Modifier.weight(1f))
+                                Text("${m.balance.coerceIn(0, g.goal.cost)}/${g.goal.cost}", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        g.members.forEach { Text(it.avatar) }
+                        if (g.members.size == 1) Text(g.members.single().avatar)
                         Spacer(Modifier.weight(1f))
                         Text(
-                            if (g.goal.status == GoalStatus.ACHIEVED) stringResource(Res.string.home_ready) else "${g.contributed}/${g.goal.cost}",
+                            if (g.goal.status == GoalStatus.ACHIEVED) stringResource(Res.string.home_ready)
+                            else if (g.members.size == 1) "${g.memberProgress.single().balance.coerceIn(0, g.goal.cost)}/${g.goal.cost}"
+                            else "",
                             style = MaterialTheme.typography.labelSmall,
                         )
                     }

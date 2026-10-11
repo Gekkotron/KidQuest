@@ -79,7 +79,7 @@ fun GoalsScreen(onNew: () -> Unit, onEdit: (Long) -> Unit, vm: GoalsViewModel = 
     }
 
     state.redeem?.let { r ->
-        RedeemDialog(r, onShare = vm::updateShare, onConfirm = vm::confirmRedeem, onDismiss = vm::cancelRedeem)
+        RedeemDialog(r, onConfirm = vm::confirmRedeem, onDismiss = vm::cancelRedeem)
     }
     if (state.restartGoalId != null) {
         AlertDialog(
@@ -101,13 +101,31 @@ private fun GoalCard(g: GoalSummary, onEdit: () -> Unit, onRedeem: () -> Unit) {
                 Text(g.goal.icon, style = MaterialTheme.typography.headlineMedium)
                 Column(Modifier.padding(start = 12.dp).weight(1f)) {
                     Text(g.goal.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text(g.members.joinToString(" ") { "${it.avatar} ${it.name}" }, style = MaterialTheme.typography.bodySmall)
+                    if (g.members.size < 2) Text(g.members.joinToString(" ") { "${it.avatar} ${it.name}" }, style = MaterialTheme.typography.bodySmall)
                 }
-                Text("${minOf(g.contributed, g.goal.cost)}/${g.goal.cost}", style = MaterialTheme.typography.labelLarge)
-            }
+                if (g.members.size == 1) {
+                    Text("${g.memberProgress.single().balance.coerceIn(0, g.goal.cost)}/${g.goal.cost}", style = MaterialTheme.typography.labelLarge)
+                }
+                            }
             if (g.goal.status != GoalStatus.REDEEMED) GoalProgressBar(g.progress)
+            if (g.members.size > 1) MemberProgressList(g)
             if (g.goal.status == GoalStatus.ACHIEVED) {
                 Button(onClick = onRedeem, modifier = Modifier.testTag("redeem-${g.goal.id}")) { Text("🎁 " + stringResource(Res.string.goals_redeem)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberProgressList(g: GoalSummary) {
+    val kids = g.members.associateBy { it.id }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        g.memberProgress.forEach { m ->
+            val child = kids[m.childId] ?: return@forEach
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(child.avatar)
+                GoalProgressBar(m.progress, Modifier.weight(1f))
+                Text("${m.balance.coerceIn(0, g.goal.cost)}/${g.goal.cost}", style = MaterialTheme.typography.labelSmall, modifier = Modifier.testTag("member-progress-${g.goal.id}-${m.childId}"))
             }
         }
     }

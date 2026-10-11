@@ -1,7 +1,6 @@
 package com.gekkotron.kidquest.data
 
 import com.gekkotron.kidquest.domain.GoalProgressCalculator
-import com.gekkotron.kidquest.domain.RedeemSplitter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlin.time.Clock
@@ -26,7 +25,9 @@ class GoalRepository(
                 GoalSummary(
                     goal = gwm.goal,
                     members = members,
-                    contributed = GoalProgressCalculator.contributed(memberBalances),
+                    memberProgress = members.mapIndexed { i, kid ->
+                        MemberProgress(kid.id, memberBalances[i], GoalProgressCalculator.memberProgress(memberBalances[i], gwm.goal.cost))
+                    },
                     progress = GoalProgressCalculator.progress(memberBalances, gwm.goal.cost),
                 )
             }
@@ -68,29 +69,27 @@ class GoalRepository(
         }
     }
 
-    /** Equal split, remainder to the oldest children first. */
-    suspend fun defaultSplit(goalId: Long): Map<Long, Int> {
-        val goal = checkNotNull(goals.get(goalId)) { "goal $goalId not found" }
-        val ordered = children.getByIds(goals.memberIds(goalId)).map { it.id }
-        return RedeemSplitter.equal(goal.cost, ordered)
-    }
-
-    suspend fun redeem(goalId: Long, split: Map<Long, Int>) {
+    /** Every member pays the full cost; balances may go negative. */
+    suspend fun redeem(goalId: Long) {
         val events = db.tx {
             val goal = checkNotNull(goals.get(goalId)) { "goal $goalId not found" }
             check(goal.status == GoalStatus.ACHIEVED) { "only achieved goals can be redeemed" }
             val members = goals.memberIds(goalId)
-            require(RedeemSplitter.isValid(goal.cost, members.toSet(), split)) { "invalid split $split for cost ${goal.cost}" }
             val now = clock.now().toEpochMilliseconds()
-            split.filterValues { it > 0 }.forEach { (childId, amount) ->
+            members.forEach { childId ->
                 points.insert(
-                    PointEvent(childId = childId, delta = -amount, type = PointEventType.REDEEM, goalId = goalId, label = goal.title, timestamp = now)
+                    PointEvent(childId = childId, delta = -goal.cost, type = PointEventType.REDEEM, goalId = goalId, label = goal.title, timestamp = now)
                 )
             }
             goals.update(goal.copy(status = GoalStatus.REDEEMED, redeemedAt = now))
             updater.refreshForChildren(members)
         }
         events.forEach(bus::emit)
+    }
+
+    /** Re-evaluates every open goal without emitting events; call once at startup so stored status matches the per-child rule. */
+    suspend fun reevaluateOpenGoals() {
+        db.tx { updater.refreshAllOpen() }
     }
 
     suspend fun restart(goalId: Long): Long {

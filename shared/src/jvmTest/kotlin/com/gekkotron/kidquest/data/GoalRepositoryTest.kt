@@ -15,14 +15,14 @@ class GoalRepositoryTest {
     @AfterTest fun tearDown() = f.db.close()
 
     @Test
-    fun observeGoalsReportsSharedProgress() = runTest {
+    fun observeGoalsReportsPerMemberProgress() = runTest {
         val lea = f.child("Léa", 1); val tom = f.child("Tom", 2)
-        f.goals.create("Cinema", "🎬", 2000, setOf(lea, tom))
+        f.goals.create("Cinema", "🎬", 1000, setOf(lea, tom))
         f.points.apply(lea, 500, "+500")
         f.points.apply(tom, -100, "−100")
         val summary = f.goals.observeGoals().first().single()
         assertEquals(listOf("Léa", "Tom"), summary.members.map { it.name })
-        assertEquals(500, summary.contributed)
+        assertEquals(listOf(MemberProgress(lea, 500, 0.5f), MemberProgress(tom, -100, 0f)), summary.memberProgress)
         assertEquals(0.25f, summary.progress)
     }
 
@@ -35,35 +35,52 @@ class GoalRepositoryTest {
     }
 
     @Test
-    fun defaultSplitOrdersByChildCreation() = runTest {
-        val older = f.child("Tom", createdAt = 1)
-        val younger = f.child("Léa", createdAt = 2)
-        val goal = f.goals.create("Cinema", "🎬", 1001, setOf(younger, older))
-        assertEquals(mapOf(older to 501, younger to 500), f.goals.defaultSplit(goal))
-    }
-
-    @Test
-    fun redeemDeductsAndMarksRedeemed() = runTest {
+    fun redeemChargesEveryMemberTheFullCost() = runTest {
         val lea = f.child("Léa", 1); val tom = f.child("Tom", 2)
         val goal = f.goals.create("Cinema", "🎬", 1000, setOf(lea, tom))
-        f.points.apply(lea, 900, "+900"); f.points.apply(tom, 100, "+100")
-        f.goals.redeem(goal, mapOf(lea to 500, tom to 500))
-        assertEquals(400, f.balance(lea))
-        assertEquals(-400, f.balance(tom)) // may go negative
+        f.points.apply(lea, 1200, "+1200"); f.points.apply(tom, 1000, "+1000")
+        f.goals.redeem(goal)
+        assertEquals(200, f.balance(lea))
+        assertEquals(0, f.balance(tom))
+        assertEquals(listOf(-1000, -1000), listOf(lea, tom).map { c -> f.points.history(c).first().single { it.type == PointEventType.REDEEM }.delta })
         val g = f.goals.get(goal)!!
         assertEquals(GoalStatus.REDEEMED, g.status)
         assertEquals(f.clock.nowMs, g.redeemedAt)
     }
 
     @Test
-    fun redeemRejectsInvalidSplitOrUnreachedGoal() = runTest {
+    fun redeemRejectsUnreachedGoal() = runTest {
+        val lea = f.child("Léa", 1); val tom = f.child("Tom", 2)
+        val goal = f.goals.create("Lego", "🧱", 100, setOf(lea, tom))
+        f.points.apply(lea, 300, "+300")
+        assertFailsWith<IllegalStateException> { f.goals.redeem(goal) } // still ACTIVE: Tom is at 0
+        assertEquals(300, f.balance(lea))
+    }
+
+    @Test
+    fun startupReevaluationFlipsPooledOnlyAchievedGoalBackWithoutEvent() = runTest {
+        val lea = f.child("Léa", 1); val tom = f.child("Tom", 2)
+        val goal = f.rawGoal(100, lea, tom)
+        f.db.goalDao().update(f.db.goalDao().get(goal)!!.copy(status = GoalStatus.ACHIEVED, achievedAt = 5))
+        f.db.pointEventDao().insert(PointEvent(childId = lea, delta = 305, type = PointEventType.AWARD, label = "x", timestamp = 1))
+        f.db.pointEventDao().insert(PointEvent(childId = tom, delta = -30, type = PointEventType.AWARD, label = "x", timestamp = 1))
+        f.bus.events.test {
+            f.goals.reevaluateOpenGoals()
+            assertEquals(GoalStatus.ACTIVE, f.status(goal))
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun startupReevaluationPromotesReachedGoalSilently() = runTest {
         val lea = f.child()
-        val goal = f.goals.create("Lego", "🧱", 100, setOf(lea))
-        assertFailsWith<IllegalStateException> { f.goals.redeem(goal, mapOf(lea to 100)) } // still ACTIVE
-        f.points.apply(lea, 100, "+100")
-        assertFailsWith<IllegalArgumentException> { f.goals.redeem(goal, mapOf(lea to 90)) }
-        assertEquals(GoalStatus.ACHIEVED, f.status(goal))
-        assertEquals(100, f.balance(lea))
+        val goal = f.rawGoal(100, lea)
+        f.db.pointEventDao().insert(PointEvent(childId = lea, delta = 100, type = PointEventType.AWARD, label = "x", timestamp = 1))
+        f.bus.events.test {
+            f.goals.reevaluateOpenGoals()
+            assertEquals(GoalStatus.ACHIEVED, f.status(goal))
+            expectNoEvents()
+        }
     }
 
     @Test
@@ -73,7 +90,7 @@ class GoalRepositoryTest {
         val small = f.goals.create("Ice cream", "🍦", 500, setOf(lea))
         f.points.apply(lea, 1000, "+1000")
         assertEquals(GoalStatus.ACHIEVED, f.status(small))
-        f.goals.redeem(big, mapOf(lea to 1000))
+        f.goals.redeem(big)
         assertEquals(GoalStatus.ACTIVE, f.status(small))
     }
 
@@ -81,11 +98,11 @@ class GoalRepositoryTest {
     fun undoingAnyRedeemEventUndoesWholeRedemption() = runTest {
         val lea = f.child("Léa", 1); val tom = f.child("Tom", 2)
         val goal = f.goals.create("Cinema", "🎬", 1000, setOf(lea, tom))
-        f.points.apply(lea, 600, "+600"); f.points.apply(tom, 400, "+400")
-        f.goals.redeem(goal, mapOf(lea to 500, tom to 500))
+        f.points.apply(lea, 1600, "+1600"); f.points.apply(tom, 1400, "+1400")
+        f.goals.redeem(goal)
         val redeemEvent = f.points.history(tom).first().first { it.type == PointEventType.REDEEM }
         f.points.undo(redeemEvent.id)
-        assertEquals(600, f.balance(lea)); assertEquals(400, f.balance(tom))
+        assertEquals(1600, f.balance(lea)); assertEquals(1400, f.balance(tom))
         assertEquals(GoalStatus.ACHIEVED, f.status(goal))
         assertNull(f.goals.get(goal)!!.redeemedAt)
     }
@@ -94,12 +111,12 @@ class GoalRepositoryTest {
     fun editingAchievedGoalAboveProgress_revertsToActiveWithoutEvent() = runTest {
         val lea = f.child("Léa", 1); val tom = f.child("Tom", 2)
         val goal = f.goals.create("Cinema", "🎬", 1000, setOf(lea, tom))
-        f.points.apply(lea, 600, "+600"); f.points.apply(tom, 400, "+400")
+        f.points.apply(lea, 1000, "+1000"); f.points.apply(tom, 1000, "+1000")
         assertEquals(GoalStatus.ACHIEVED, f.status(goal))
         f.bus.events.test {
             f.goals.update(goal, "Cinema", "🎬", 1500, setOf(lea, tom))
             assertEquals(GoalStatus.ACTIVE, f.status(goal))
-            f.goals.update(goal, "Cinema", "🎬", 1000, setOf(lea)) // removing Tom: 600 < 1000
+            f.goals.update(goal, "Cinema", "🎬", 1200, setOf(lea)) // 1000 < 1200
             assertEquals(GoalStatus.ACTIVE, f.status(goal))
             expectNoEvents()
         }
@@ -110,7 +127,7 @@ class GoalRepositoryTest {
         val lea = f.child()
         val goal = f.goals.create("Lego", "🧱", 100, setOf(lea))
         f.points.apply(lea, 100, "+100")
-        f.goals.redeem(goal, mapOf(lea to 100))
+        f.goals.redeem(goal)
         val copy = f.goals.restart(goal)
         val g = f.goals.get(copy)!!
         assertEquals(listOf("Lego", "🧱"), listOf(g.title, g.icon))
@@ -129,7 +146,7 @@ class GoalRepositoryTest {
 
         val redeemed = f.goals.create("Ice", "🍦", 10, setOf(lea))
         f.points.apply(lea, 10, "+10")
-        f.goals.redeem(redeemed, mapOf(lea to 10))
+        f.goals.redeem(redeemed)
         assertFailsWith<IllegalStateException> { f.goals.delete(redeemed) }
     }
 }

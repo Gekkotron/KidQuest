@@ -6,7 +6,6 @@ import com.gekkotron.kidquest.data.Child
 import com.gekkotron.kidquest.data.GoalRepository
 import com.gekkotron.kidquest.data.GoalStatus
 import com.gekkotron.kidquest.data.GoalSummary
-import com.gekkotron.kidquest.domain.RedeemSplitter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,21 +14,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class RedeemMember(val child: Child, val balance: Int)
+
 data class RedeemState(
     val goalId: Long,
     val title: String,
+    /** Charged to every member. */
     val cost: Int,
-    val members: List<Child>,
-    /** Raw text per child, as typed in the dialog. */
-    val shares: Map<Long, String>,
-) {
-    /** null when any share is not a non-negative integer. */
-    val parsed: Map<Long, Int>? = shares.mapValues { it.value.trim().toIntOrNull() }
-        .takeIf { m -> m.values.all { it != null && it >= 0 } }
-        ?.mapValues { it.value!! }
-    val total: Int = shares.values.sumOf { it.trim().toIntOrNull() ?: 0 }
-    val isValid: Boolean = parsed?.let { RedeemSplitter.isValid(cost, members.map { m -> m.id }.toSet(), it) } ?: false
-}
+    val members: List<RedeemMember>,
+)
 
 data class GoalsUiState(
     val loading: Boolean = true,
@@ -58,26 +51,18 @@ class GoalsViewModel(private val goals: GoalRepository) : ViewModel() {
 
     /** The Redeem button is only shown for loaded achieved goals, so the summary is always in state. */
     fun startRedeem(goalId: Long) {
-        viewModelScope.launch {
-            val summary = state.value.achieved.firstOrNull { it.goal.id == goalId } ?: return@launch
-            val split = goals.defaultSplit(goalId)
-            dialogs.update {
-                it.copy(redeem = RedeemState(goalId, summary.goal.title, summary.goal.cost, summary.members, split.mapValues { e -> e.value.toString() }))
-            }
-        }
-    }
-
-    fun updateShare(childId: Long, text: String) {
-        dialogs.update { d -> d.copy(redeem = d.redeem?.let { r -> r.copy(shares = r.shares + (childId to text)) }) }
+        val summary = state.value.achieved.firstOrNull { it.goal.id == goalId } ?: return
+        val balances = summary.memberProgress.associate { it.childId to it.balance }
+        val members = summary.members.map { RedeemMember(it, balances[it.id] ?: 0) }
+        dialogs.update { it.copy(redeem = RedeemState(goalId, summary.goal.title, summary.goal.cost, members)) }
     }
 
     fun cancelRedeem() = dialogs.update { it.copy(redeem = null) }
 
     fun confirmRedeem() {
         val r = dialogs.value.redeem ?: return
-        val split = r.parsed?.takeIf { r.isValid } ?: return
         viewModelScope.launch {
-            goals.redeem(r.goalId, split)
+            goals.redeem(r.goalId)
             dialogs.update { Dialogs(redeem = null, restartGoalId = r.goalId) }
         }
     }

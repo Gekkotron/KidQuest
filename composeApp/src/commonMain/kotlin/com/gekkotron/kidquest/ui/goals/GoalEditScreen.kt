@@ -35,6 +35,7 @@ import com.gekkotron.kidquest.resources.Res
 import com.gekkotron.kidquest.resources.back
 import com.gekkotron.kidquest.resources.delete
 import com.gekkotron.kidquest.resources.goal_cost
+import com.gekkotron.kidquest.resources.goal_cost_per_child
 import com.gekkotron.kidquest.resources.goal_edit_title
 import com.gekkotron.kidquest.resources.goal_members
 import com.gekkotron.kidquest.resources.goal_title
@@ -67,7 +68,7 @@ fun GoalEditScreen(goalId: Long, onDone: () -> Unit) {
             )
             OutlinedTextField(
                 value = s.costText, onValueChange = vm::setCost, singleLine = true,
-                label = { Text(stringResource(Res.string.goal_cost)) },
+                label = { Text(stringResource(if (s.memberIds.size >= 2) Res.string.goal_cost_per_child else Res.string.goal_cost)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth().testTag("goal-cost"),
             )

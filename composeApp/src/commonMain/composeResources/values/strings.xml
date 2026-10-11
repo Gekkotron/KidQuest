@@ -31,10 +31,11 @@
     <string name="goals_redeem">Redeem</string>
     <string name="goal_title">Title</string>
     <string name="goal_cost">Cost (points)</string>
+    <string name="goal_cost_per_child">Points per child</string>
     <string name="goal_members">Who is saving for it?</string>
     <string name="goal_edit_title">Edit goal</string>
     <string name="redeem_title">Redeem %1$s</string>
-    <string name="redeem_total">Total: %1$d / %2$d</string>
+    <string name="redeem_member_balance">%1$d left</string>
     <string name="restart_title">Start again?</string>
     <string name="restart_body">Create the same goal again for the same children?</string>
     <string name="restart_yes">Start again</string>

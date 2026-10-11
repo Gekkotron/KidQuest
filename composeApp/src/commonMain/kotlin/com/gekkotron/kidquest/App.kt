@@ -10,6 +10,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.gekkotron.kidquest.data.GoalRepository
 import com.gekkotron.kidquest.data.SettingsRepository
 import com.gekkotron.kidquest.resources.Res
 import com.gekkotron.kidquest.resources.tab_goals
@@ -50,6 +52,8 @@ import kotlin.reflect.KClass
 @Composable
 fun App() {
     val settings = koinInject<SettingsRepository>()
+    val goals = koinInject<GoalRepository>()
+    LaunchedEffect(Unit) { goals.reevaluateOpenGoals() }
     val language by settings.observeLanguage().collectAsStateWithLifecycle(initialValue = null)
     AppEnvironment(language) {
         KidQuestTheme {

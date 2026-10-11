@@ -14,6 +14,8 @@ class GoalStatusUpdater(
         return goalDao.openGoalsForChildren(childIds.distinct()).mapNotNull { refresh(it) }
     }
 
+    suspend fun refreshAllOpen(): List<AppEvent> = goalDao.openGoals().mapNotNull { refresh(it) }
+
     suspend fun refreshGoal(goalId: Long): AppEvent? = goalDao.get(goalId)?.let { refresh(it) }
 
     private suspend fun refresh(goal: Goal): AppEvent? {

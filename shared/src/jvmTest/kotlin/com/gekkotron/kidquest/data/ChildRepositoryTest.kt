@@ -44,14 +44,16 @@ class ChildRepositoryTest {
     }
 
     @Test
-    fun archivedChildHiddenButStillCountsTowardSharedGoal() = runTest {
+    fun archivedChildHiddenButStillMustReachSharedGoalCost() = runTest {
         val lea = f.children.add("Léa", "🦊", 0xFFE57373)
         val tom = f.children.add("Tom", "🐻", 0xFF64B5F6)
         val goal = f.goals.create("Cinema", "🎬", 100, setOf(lea, tom))
-        f.points.apply(tom, 60, "+60")
+        f.points.apply(tom, 100, "+100")
         f.children.setArchived(tom, true)
         assertEquals(listOf("Léa"), f.children.observeSummaries().first().map { it.child.name })
         assertEquals(2, f.children.observeSummaries(includeArchived = true).first().size)
+        f.points.apply(lea, 60, "+60")
+        assertEquals(GoalStatus.ACTIVE, f.status(goal))
         f.points.apply(lea, 40, "+40")
         assertEquals(GoalStatus.ACHIEVED, f.status(goal))
     }

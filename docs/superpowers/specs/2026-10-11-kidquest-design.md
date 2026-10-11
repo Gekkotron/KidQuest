@@ -12,7 +12,7 @@ A standalone family app (Android + iOS, Kotlin Multiplatform) where a parent awa
 
 - A parent can award points to a child in **one tap** (quick buttons) and undo a mis-tap within seconds.
 - Children see their balance, level, streak and goal progress at a glance on the home screen.
-- Shared goals pool the progress of several children and are redeemed with a parent-adjustable split.
+- A goal's `cost` is **per child**. A shared goal is reached only when every member has at least `cost` points, and on redeem each member pays the full `cost`. Solo goals behave the same way with one member.
 - Same app, same behaviour on Android and iOS from one codebase.
 
 ### Constraints & decisions
@@ -37,7 +37,7 @@ Sync/backend, multiple devices, parent PIN, notifications/reminders, photo proof
 | `PointAction` | `id`, `label`, `points` (non-zero int, ±), `icon` (emoji), `sortOrder` | Configurable action list. |
 | `QuickAmount` | `id`, `points` (non-zero int, ±), `sortOrder` | Global, shown on every child card. |
 | `PointEvent` | `id`, `childId`, `delta`, `type`, `actionId?`, `goalId?`, `label`, `timestamp` (epoch ms), `undone` | **Source of truth for all point math.** `type ∈ {AWARD, PENALTY, REDEEM}`. AWARD has `delta > 0`, PENALTY `delta < 0`, REDEEM `delta ≤ 0` with `goalId` set. |
-| `Goal` | `id`, `title`, `icon` (emoji), `cost` (> 0), `status`, `createdAt`, `achievedAt?`, `redeemedAt?` | `status ∈ {ACTIVE, ACHIEVED, REDEEMED}`. |
+| `Goal` | `id`, `title`, `icon` (emoji), `cost` (> 0, points required from **each** member), `status`, `createdAt`, `achievedAt?`, `redeemedAt?` | `status ∈ {ACTIVE, ACHIEVED, REDEEMED}`. |
 | `GoalMember` | `goalId`, `childId` (composite PK) | 1 member = solo goal, 2+ = shared goal. |
 
 Room schema is exported (`room.schemaDirectory`) from version 1 so future migrations can be tested.
@@ -50,20 +50,23 @@ All computed by pure functions in `shared/domain`, from non-undone `PointEvent`s
 - **LifetimeEarned(child)** = Σ `delta` where `type = AWARD`. Never decreases on penalty or redeem.
 - **Level(lifetime)**: level 1 starts at 0. Threshold to reach level *n* (n ≥ 2) = `floor(100 · (n − 1)^1.5)` → L2 = 100, L3 = 282, L4 = 519, L5 = 800, … The level is the highest *n* whose threshold ≤ lifetime. Level progress = (lifetime − threshold(n)) / (threshold(n+1) − threshold(n)).
 - **Streak(child, today)**: the set of local dates (device time zone) that have at least one AWARD event. If neither today nor yesterday is in the set, the streak is 0. Otherwise it is the number of consecutive days ending on the most recent of today/yesterday that is in the set.
-- **GoalProgress(goal)** = Σ over members of `max(0, Balance(member))`, divided by `cost`, clamped to [0, 1] for display. Balances count toward **every** goal the child belongs to; nothing is reserved until redemption.
+- **MemberProgress(goal, child)** = `max(0, Balance(child)) / cost`, clamped to [0, 1].
+- **GoalProgress(goal)** = the mean of the members' MemberProgress, for display. It is 1 only when every member has reached the cost.
+- **Reached(goal)** = the goal has members and every member has `Balance ≥ cost`. One member below the cost (including a negative balance) blocks the goal. Balances count toward **every** goal the child belongs to; nothing is reserved until redemption.
 
 ## 4. Goal lifecycle
 
 ```
-ACTIVE ──progress ≥ 1──▶ ACHIEVED ──redeem──▶ REDEEMED
+ACTIVE ──reached──▶ ACHIEVED ──redeem──▶ REDEEMED
    ▲                        │  ▲                  │
-   └──progress < 1 ─────────┘  └──undo redeem─────┘
+   └──not reached ──────────┘  └──undo redeem─────┘
 ```
 
 - **GoalStatusUpdater** runs after every write that creates or undoes a `PointEvent`. It recomputes progress for all ACTIVE and ACHIEVED goals that contain an affected child and flips status in both directions (sets or clears `achievedAt`).
 - The ACTIVE → ACHIEVED transition emits `AppEvent.GoalAchieved(goalId)`. A level increase caused by an award emits `AppEvent.LevelUp(childId, newLevel)`. Both go on an app-wide `SharedFlow` that the UI turns into the celebration overlay. Reverse transitions emit nothing.
-- **Redeem(goal, split)** is allowed only when `status = ACHIEVED`. `split` maps each member to a non-negative amount. Σ split must equal `cost`. In one transaction: insert one REDEEM event per member with `delta = −amount` (skip amounts of 0), set `status = REDEEMED` and `redeemedAt`. A member's balance may go negative because of a redeem.
-- **Default split** (`RedeemSplitter.equal`): `cost / n` each, with the remainder given one point at a time to members in `Child.createdAt` order. Example: 1001 between 2 → 501 / 500. The parent can edit any amount. The dialog shows the live total and disables Confirm until the total equals the cost.
+- **Redeem(goal)** is allowed only when `status = ACHIEVED`. In one transaction: insert one REDEEM event per member with `delta = −cost`, set `status = REDEEMED` and `redeemedAt`, then run GoalStatusUpdater for those members so their other ACHIEVED goals can drop back to ACTIVE. A member's balance may go negative because of a redeem.
+- **Redeem confirmation:** a simple dialog listing each member with `−cost` and their resulting balance, plus Confirm and Cancel. There is no split to edit.
+- **Startup re-evaluation:** status only changes after writes, so on app start `GoalRepository.reevaluateOpenGoals()` recomputes every ACTIVE and ACHIEVED goal silently (no `GoalAchieved` events). A goal that was ACHIEVED under the old pooled rule drops back to ACTIVE if some member is below the cost.
 - **Restart** (offered after redeem): creates a new ACTIVE goal copying title, icon, cost and members.
 - **Undo of a REDEEM event** undoes **all** REDEEM events with that `goalId` in one transaction and sets the goal back to ACHIEVED (clearing `redeemedAt`), then runs GoalStatusUpdater.
 
@@ -78,7 +81,7 @@ ACTIVE ──progress ≥ 1──▶ ACHIEVED ──redeem──▶ REDEEMED
 Bottom navigation: **Home · Goals · Settings**.
 
 1. **Home**
-   - **Active goals strip** at the top: horizontal cards with icon, title, progress bar, and member avatars (stacked when shared).
+   - **Active goals strip** at the top: horizontal cards with icon, title, overall progress bar and, for shared goals, each member's avatar with their own small progress bar and `balance/cost`.
    - **One card per child** (non-archived, ordered by `createdAt`):
      - avatar, name and colour;
      - large balance, shown in red when negative;
@@ -92,9 +95,9 @@ Bottom navigation: **Home · Goals · Settings**.
    - History grouped by local day, newest first, with undo/restore per entry.
 3. **Goals**
    - Tabs: Active / Achieved / Redeemed. A FAB opens **Create goal**.
-   - Goal form: title, icon, cost, and member children (multi-select, at least 1).
+   - Goal form: title, icon, cost (labelled "Points per child" when 2+ members are selected), and member children (multi-select, at least 1).
    - Editing members or cost re-runs GoalStatusUpdater for that goal.
-   - Achieved goals show **Redeem**, which opens the split dialog, then confirm, then the option to restart.
+   - Achieved goals show **Redeem**, which opens the confirmation dialog, then confirm, then the option to restart.
 4. **Celebration overlay**
    - Full-screen confetti with "🎉 Goal reached: <title>!" for GoalAchieved.
    - A smaller banner for LevelUp.
@@ -118,11 +121,11 @@ shared/                     KMP library, no Compose
 iosApp/                     Xcode project hosting ComposeUIViewController
 ```
 
-- **Domain:** `LevelCalculator`, `StreakCalculator`, `GoalProgressCalculator`, `RedeemSplitter`. Pure, deterministic, and with time zone and "today" injected.
+- **Domain:** `LevelCalculator`, `StreakCalculator`, `GoalProgressCalculator`. Pure, deterministic, and with time zone and "today" injected.
 - **Data:**
   - `ChildRepository`;
   - `PointRepository` (`apply(childId, delta, label, actionId?)` — type is AWARD if `delta > 0`, PENALTY if `delta < 0`, and `delta = 0` is rejected; `undo(eventId)`, `restore(eventId)`, `history(childId): Flow`);
-  - `GoalRepository` (`create`, `update`, `redeem(goalId, split)`, `restart(goalId)`, `observe…`);
+  - `GoalRepository` (`create`, `update`, `redeem(goalId)`, `reevaluateOpenGoals()`, `restart(goalId)`, `observe…`);
   - `SettingsRepository` (actions, quick amounts, language).
   - DAOs expose `Flow`, and multi-row writes are `@Transaction`.
 - **GoalStatusUpdater:** called by `PointRepository` and `GoalRepository` after writes. It owns the `SharedFlow<AppEvent>`.
@@ -134,28 +137,31 @@ iosApp/                     Xcode project hosting ComposeUIViewController
 - **Validation (ViewModels):**
   - child name non-empty;
   - action label non-empty with non-zero points;
-  - goal title non-empty with cost > 0 and at least 1 member;
-  - redeem split total equal to the cost, with all amounts ≥ 0.
+  - goal title non-empty with cost > 0 and at least 1 member.
 
 ## 8. Testing
 
 - **Domain (`commonTest`, kotlin.test, written TDD):**
   - level thresholds at exact boundaries;
   - streaks that are empty, today-only, yesterday-only, have a gap, or cross midnight/DST;
-  - progress with negative balances clamped to 0;
-  - equal split with a remainder;
-  - split validation.
+  - member progress with negative balances clamped to 0;
+  - mean progress for shared goals;
+  - reached only when every member has at least the cost, and one negative member blocks the goal;
+  - solo goals unchanged.
 - **Repositories (in-memory Room, Android/JVM host tests):**
   - apply → balance;
   - undo/restore;
-  - redeem atomicity and resulting status;
+  - redeem charges every member the full cost, atomically, with the resulting status;
+  - redeeming drops members' other ACHIEVED goals back to ACTIVE;
+  - startup re-evaluation flips a pooled-only ACHIEVED goal back to ACTIVE with no event;
   - undoing a redeem → ACHIEVED;
   - status flips ACTIVE↔ACHIEVED;
   - GoalAchieved/LevelUp emitted only on forward transitions.
 - **ViewModels (fakes + Turbine):**
   - a quick award emits the undo snackbar effect;
   - reaching a goal emits the celebration;
-  - the split dialog's Confirm button is disabled on a bad total.
+  - the redeem confirmation shows `−cost` for each member;
+  - the cost field reads "Points per child" when 2+ members are selected.
 - **Compose UI test (critical path):** add child → tap +20 → balance 20 → Undo → 0.
 - **iOS:** shared tests run on `iosSimulatorArm64Test`, plus a manual simulator smoke test.
 - **CI:** GitHub Actions on a macOS runner runs the Gradle build and all tests.

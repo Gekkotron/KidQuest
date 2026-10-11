@@ -46,13 +46,19 @@ jobs:
           if-no-files-found: error
       - name: Distribute to Firebase App Distribution
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          groups: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
-          file: androidApp/build/outputs/apk/release/androidApp-release.apk
-          releaseNotes: |
-            ${{ github.event.head_commit.message }}
-
-            Commit: ${{ github.sha }}
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          npm install --silent --global firebase-tools
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          printf '%s' "$FIREBASE_SA" > "$GOOGLE_APPLICATION_CREDENTIALS"
+          firebase appdistribution:distribute \
+            androidApp/build/outputs/apk/release/androidApp-release.apk \
+            --app "$FIREBASE_APP_ID" \
+            --groups "$FIREBASE_TESTER_GROUPS" \
+            --release-notes "$COMMIT_MESSAGE
+          Commit: $COMMIT_SHA"

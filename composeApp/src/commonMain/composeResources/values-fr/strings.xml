@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">KidQuest</string>
+    <string name="tab_home">Accueil</string>
+    <string name="tab_goals">Objectifs</string>
+    <string name="tab_settings">Réglages</string>
+    <string name="save">Enregistrer</string>
+    <string name="cancel">Annuler</string>
+    <string name="delete">Supprimer</string>
+    <string name="undo">Annuler</string>
+</resources>

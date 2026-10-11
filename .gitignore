@@ -8,3 +8,6 @@ local.properties
 iosApp/*.xcodeproj/xcuserdata/
 iosApp/*.xcodeproj/project.xcworkspace/xcuserdata/
 .superpowers/
+*.jks
+*.keystore
+credential-*

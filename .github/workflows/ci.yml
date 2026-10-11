@@ -18,7 +18,41 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: JVM tests (domain, data, view models, UI)
         run: ./gradlew :shared:jvmTest :composeApp:jvmTest --stacktrace
-      - name: Android build
+      - name: Android debug build (PRs and non-main pushes)
+        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
         run: ./gradlew :androidApp:assembleDebug --stacktrace
       - name: iOS tests and framework link
         run: ./gradlew :shared:iosSimulatorArm64Test :composeApp:linkDebugFrameworkIosSimulatorArm64 --stacktrace
+      - name: Decode release keystore
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KIDQUEST_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/kidquest-release.jks"
+          echo "KIDQUEST_KEYSTORE_PATH=$RUNNER_TEMP/kidquest-release.jks" >> "$GITHUB_ENV"
+      - name: Build signed release APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          KIDQUEST_KEYSTORE_PASSWORD: ${{ secrets.KIDQUEST_KEYSTORE_PASSWORD }}
+          KIDQUEST_KEY_ALIAS: ${{ secrets.KIDQUEST_KEY_ALIAS }}
+          KIDQUEST_KEY_PASSWORD: ${{ secrets.KIDQUEST_KEY_PASSWORD }}
+        run: ./gradlew :androidApp:assembleRelease --stacktrace
+      - name: Upload release APK artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kidquest-android-release
+          path: androidApp/build/outputs/apk/release/androidApp-release.apk
+          if-no-files-found: error
+      - name: Distribute to Firebase App Distribution
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+          file: androidApp/build/outputs/apk/release/androidApp-release.apk
+          releaseNotes: |
+            ${{ github.event.head_commit.message }}
+
+            Commit: ${{ github.sha }}

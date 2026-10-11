@@ -7,4 +7,14 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="undo">Undo</string>
+    <string name="home_empty_title">No children yet</string>
+    <string name="home_add_first_child">Add your first child</string>
+    <string name="home_more">More…</string>
+    <string name="home_level">Lvl %1$d</string>
+    <string name="home_ready">Ready!</string>
+    <string name="home_actions_title">Award %1$s</string>
+    <string name="snackbar_applied">%1$s → %2$s</string>
+    <string name="child_edit_title_new">New child</string>
+    <string name="child_edit_title">Edit child</string>
+    <string name="child_name">Name</string>
 </resources>

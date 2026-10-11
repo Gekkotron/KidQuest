@@ -29,6 +29,8 @@ import com.gekkotron.kidquest.resources.tab_goals
 import com.gekkotron.kidquest.resources.tab_home
 import com.gekkotron.kidquest.resources.tab_settings
 import com.gekkotron.kidquest.ui.locale.AppEnvironment
+import com.gekkotron.kidquest.ui.home.HomeScreen
+import com.gekkotron.kidquest.ui.nav.ChildDetailRoute
 import com.gekkotron.kidquest.ui.nav.GoalsRoute
 import com.gekkotron.kidquest.ui.nav.HomeRoute
 import com.gekkotron.kidquest.ui.nav.SettingsRoute
@@ -52,9 +54,12 @@ fun App() {
                     bottomBar = { BottomBar(nav) },
                 ) { padding ->
                     NavHost(nav, startDestination = HomeRoute, modifier = Modifier.padding(padding)) {
-                        composable<HomeRoute> { Placeholder("screen-home") }
+                        composable<HomeRoute> {
+                            HomeScreen(snackbarHostState, onOpenChild = { nav.navigate(ChildDetailRoute(it)) })
+                        }
                         composable<GoalsRoute> { Placeholder("screen-goals") }
                         composable<SettingsRoute> { Placeholder("screen-settings") }
+                        composable<ChildDetailRoute> { Placeholder("screen-child") }
                     }
                 }
             }

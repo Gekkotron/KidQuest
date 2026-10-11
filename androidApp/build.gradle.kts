@@ -34,10 +34,14 @@ android {
         create("release") {
             val keystorePath = secret("KIDQUEST_KEYSTORE_PATH")
             if (keystorePath != null) {
+                val storePwd = secret("KIDQUEST_KEYSTORE_PASSWORD")
+                    ?: secret("KIDQUEST_KEY_PASSWORD").orEmpty()
+                val keyPwd = secret("KIDQUEST_KEY_PASSWORD")
+                    ?: secret("KIDQUEST_KEYSTORE_PASSWORD").orEmpty()
                 storeFile = file(keystorePath)
-                storePassword = secret("KIDQUEST_KEYSTORE_PASSWORD") ?: ""
+                storePassword = storePwd
                 keyAlias = secret("KIDQUEST_KEY_ALIAS")
-                keyPassword = secret("KIDQUEST_KEY_PASSWORD") ?: ""
+                keyPassword = keyPwd
             }
         }
     }

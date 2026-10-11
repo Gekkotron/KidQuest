@@ -35,9 +35,9 @@ android {
             val keystorePath = secret("KIDQUEST_KEYSTORE_PATH")
             if (keystorePath != null) {
                 storeFile = file(keystorePath)
-                storePassword = secret("KIDQUEST_KEYSTORE_PASSWORD")
+                storePassword = secret("KIDQUEST_KEYSTORE_PASSWORD") ?: ""
                 keyAlias = secret("KIDQUEST_KEY_ALIAS")
-                keyPassword = secret("KIDQUEST_KEY_PASSWORD")
+                keyPassword = secret("KIDQUEST_KEY_PASSWORD") ?: ""
             }
         }
     }

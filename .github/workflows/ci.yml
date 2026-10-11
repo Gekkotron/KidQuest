@@ -36,7 +36,7 @@ jobs:
           KIDQUEST_KEYSTORE_PASSWORD: ${{ secrets.KIDQUEST_KEYSTORE_PASSWORD }}
           KIDQUEST_KEY_ALIAS: ${{ secrets.KIDQUEST_KEY_ALIAS }}
           KIDQUEST_KEY_PASSWORD: ${{ secrets.KIDQUEST_KEY_PASSWORD }}
-        run: ./gradlew :androidApp:assembleRelease --stacktrace
+        run: ./gradlew :androidApp:assembleRelease --no-daemon --stacktrace
       - name: Upload release APK artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4

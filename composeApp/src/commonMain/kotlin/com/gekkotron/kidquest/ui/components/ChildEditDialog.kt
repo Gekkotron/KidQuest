@@ -1,15 +1,8 @@
 package com.gekkotron.kidquest.ui.components
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +25,6 @@ import com.gekkotron.kidquest.resources.save
 import com.gekkotron.kidquest.ui.Palette
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ChildEditDialog(initial: Child?, onDismiss: () -> Unit, onSave: (name: String, avatar: String, color: Long) -> Unit) {
     var name by remember { mutableStateOf(initial?.name.orEmpty()) }
@@ -49,14 +41,7 @@ fun ChildEditDialog(initial: Child?, onDismiss: () -> Unit, onSave: (name: Strin
                     modifier = Modifier.testTag("child-name"),
                 )
                 IconPicker(Palette.avatars, avatar, { avatar = it }, testTagPrefix = "avatar")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Palette.childColors.forEach { c ->
-                        Column(
-                            Modifier.clickable { color = c }
-                                .then(if (c == color) Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier)
-                        ) { ChildAvatar(avatar = "", color = c, size = 32.dp) }
-                    }
-                }
+                ColorPicker(Palette.childColors, color, { color = it })
             }
         },
         confirmButton = {

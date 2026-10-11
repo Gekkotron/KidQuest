@@ -59,4 +59,5 @@
     <string name="quick_edit_title">Quick button</string>
     <string name="ok">OK</string>
     <string name="icon_custom">Type or paste an emoji</string>
+    <string name="color_custom">Pick a color</string>
 </resources>

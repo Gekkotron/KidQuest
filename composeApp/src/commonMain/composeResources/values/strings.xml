@@ -57,4 +57,6 @@
     <string name="action_points">Points (use − for a penalty)</string>
     <string name="action_edit_title">Point action</string>
     <string name="quick_edit_title">Quick button</string>
+    <string name="ok">OK</string>
+    <string name="icon_custom">Type or paste an emoji</string>
 </resources>

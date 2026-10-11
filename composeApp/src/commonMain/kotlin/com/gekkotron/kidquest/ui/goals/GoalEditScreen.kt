@@ -42,6 +42,7 @@ import com.gekkotron.kidquest.resources.goals_new
 import com.gekkotron.kidquest.resources.save
 import com.gekkotron.kidquest.ui.Palette
 import com.gekkotron.kidquest.ui.components.ChildAvatar
+import com.gekkotron.kidquest.ui.components.IconPicker
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -58,15 +59,7 @@ fun GoalEditScreen(goalId: Long, onDone: () -> Unit) {
             navigationIcon = { TextButton(onClick = onDone) { Text("‹ " + stringResource(Res.string.back)) } },
         )
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                items(Palette.goalIcons) { icon ->
-                    Text(
-                        icon, style = MaterialTheme.typography.headlineMedium,
-                        modifier = Modifier.clickable { vm.setIcon(icon) }.padding(4.dp)
-                            .then(if (icon == s.icon) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier),
-                    )
-                }
-            }
+            IconPicker(Palette.goalIcons, s.icon, vm::setIcon, testTagPrefix = "goal-icon")
             OutlinedTextField(
                 value = s.title, onValueChange = vm::setTitle, singleLine = true,
                 label = { Text(stringResource(Res.string.goal_title)) },

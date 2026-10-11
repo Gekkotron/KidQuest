@@ -157,7 +157,7 @@ private fun ChildCardView(
 ) {
     val s = card.summary
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(s.child.color.toInt()).copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = Color(s.child.color.toInt()).copy(alpha = 0.30f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

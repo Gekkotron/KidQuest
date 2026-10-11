@@ -27,7 +27,7 @@ fun formatSigned(points: Int): String = if (points >= 0) "+$points" else "−${-
 @Composable
 fun ChildAvatar(avatar: String, color: Long, size: Dp = 48.dp) {
     Box(
-        Modifier.size(size).clip(CircleShape).background(Color(color.toInt()).copy(alpha = 0.35f)),
+        Modifier.size(size).clip(CircleShape).background(Color(color.toInt()).copy(alpha = 1f)),
         contentAlignment = Alignment.Center,
     ) {
         Text(avatar, fontSize = (size.value * 0.55f).sp)

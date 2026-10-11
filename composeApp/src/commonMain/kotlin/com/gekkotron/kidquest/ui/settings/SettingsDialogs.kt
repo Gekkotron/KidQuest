@@ -30,29 +30,21 @@ import com.gekkotron.kidquest.resources.cancel
 import com.gekkotron.kidquest.resources.quick_edit_title
 import com.gekkotron.kidquest.resources.save
 import com.gekkotron.kidquest.ui.components.formatSigned
+import com.gekkotron.kidquest.ui.Palette
+import com.gekkotron.kidquest.ui.components.IconPicker
 import org.jetbrains.compose.resources.stringResource
-
-private val actionIcons = listOf("⭐", "🧽", "👟", "🧹", "🍽️", "🪥", "🛏️", "🧺", "🐱", "📚", "🌱", "😠", "🙉", "📵")
 
 @Composable
 fun ActionEditDialog(initial: PointAction?, onDismiss: () -> Unit, onSave: (label: String, pointsText: String, icon: String) -> Unit) {
     var label by remember { mutableStateOf(initial?.label.orEmpty()) }
     var points by remember { mutableStateOf(initial?.points?.let(::formatSigned).orEmpty()) }
-    var icon by remember { mutableStateOf(initial?.icon ?: actionIcons.first()) }
+    var icon by remember { mutableStateOf(initial?.icon ?: Palette.actionIcons.first()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.action_edit_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    items(actionIcons) { i ->
-                        Text(
-                            i, style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { icon = i }.padding(4.dp)
-                                .then(if (i == icon) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier),
-                        )
-                    }
-                }
+                IconPicker(Palette.actionIcons, icon, { icon = it }, testTagPrefix = "action-icon")
                 OutlinedTextField(label, { label = it }, singleLine = true, label = { Text(stringResource(Res.string.action_label)) }, modifier = Modifier.testTag("action-label"))
                 OutlinedTextField(points, { points = it }, singleLine = true, label = { Text(stringResource(Res.string.action_points)) }, modifier = Modifier.testTag("action-points"))
             }

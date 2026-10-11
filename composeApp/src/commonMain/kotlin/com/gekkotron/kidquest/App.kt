@@ -23,12 +23,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.gekkotron.kidquest.data.SettingsRepository
 import com.gekkotron.kidquest.resources.Res
 import com.gekkotron.kidquest.resources.tab_goals
 import com.gekkotron.kidquest.resources.tab_home
 import com.gekkotron.kidquest.resources.tab_settings
 import com.gekkotron.kidquest.ui.locale.AppEnvironment
+import com.gekkotron.kidquest.ui.child.ChildDetailScreen
 import com.gekkotron.kidquest.ui.home.HomeScreen
 import com.gekkotron.kidquest.ui.nav.ChildDetailRoute
 import com.gekkotron.kidquest.ui.nav.GoalsRoute
@@ -59,7 +61,10 @@ fun App() {
                         }
                         composable<GoalsRoute> { Placeholder("screen-goals") }
                         composable<SettingsRoute> { Placeholder("screen-settings") }
-                        composable<ChildDetailRoute> { Placeholder("screen-child") }
+                        composable<ChildDetailRoute> { entry ->
+                            val route = entry.toRoute<ChildDetailRoute>()
+                            ChildDetailScreen(route.childId, onBack = { nav.popBackStack() })
+                        }
                     }
                 }
             }

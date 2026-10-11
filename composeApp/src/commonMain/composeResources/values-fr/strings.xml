@@ -17,4 +17,10 @@
     <string name="child_edit_title_new">Nouvel enfant</string>
     <string name="child_edit_title">Modifier l’enfant</string>
     <string name="child_name">Prénom</string>
+    <string name="child_lifetime">Gagné au total : %1$d</string>
+    <string name="child_streak">🔥 Série de %1$d jours</string>
+    <string name="child_history">Historique</string>
+    <string name="child_restore">Rétablir</string>
+    <string name="child_redeemed">🎁 %1$s</string>
+    <string name="back">Retour</string>
 </resources>

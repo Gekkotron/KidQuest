@@ -40,6 +40,7 @@ import com.gekkotron.kidquest.ui.nav.GoalEditRoute
 import com.gekkotron.kidquest.ui.nav.GoalsRoute
 import com.gekkotron.kidquest.ui.nav.HomeRoute
 import com.gekkotron.kidquest.ui.nav.SettingsRoute
+import com.gekkotron.kidquest.ui.settings.SettingsScreen
 import com.gekkotron.kidquest.ui.theme.KidQuestTheme
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -69,7 +70,7 @@ fun App() {
                         composable<GoalEditRoute> { entry ->
                             GoalEditScreen(entry.toRoute<GoalEditRoute>().goalId, onDone = { nav.popBackStack() })
                         }
-                        composable<SettingsRoute> { Placeholder("screen-settings") }
+                        composable<SettingsRoute> { SettingsScreen() }
                         composable<ChildDetailRoute> { entry ->
                             val route = entry.toRoute<ChildDetailRoute>()
                             ChildDetailScreen(route.childId, onBack = { nav.popBackStack() })
@@ -80,11 +81,6 @@ fun App() {
             }
         }
     }
-}
-
-@Composable
-private fun Placeholder(tag: String) {
-    Box(Modifier.fillMaxSize().testTag(tag))
 }
 
 private data class Tab(val route: Any, val routeClass: KClass<*>, val label: StringResource, val icon: String, val tag: String)

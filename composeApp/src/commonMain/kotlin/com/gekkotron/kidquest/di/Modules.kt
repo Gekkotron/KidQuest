@@ -11,6 +11,7 @@ import com.gekkotron.kidquest.ui.child.ChildDetailViewModel
 import com.gekkotron.kidquest.ui.goals.GoalEditViewModel
 import com.gekkotron.kidquest.ui.goals.GoalsViewModel
 import com.gekkotron.kidquest.ui.home.HomeViewModel
+import com.gekkotron.kidquest.ui.settings.SettingsViewModel
 import kotlinx.datetime.TimeZone
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -36,6 +37,7 @@ val viewModelModule = module {
     viewModel { (childId: Long) -> ChildDetailViewModel(childId, get(), get()) }
     viewModelOf(::GoalsViewModel)
     viewModel { (goalId: Long) -> GoalEditViewModel(goalId, get(), get()) }
+    viewModelOf(::SettingsViewModel)
 }
 
 /** [platformModule] must provide the single KidQuestDatabase. */

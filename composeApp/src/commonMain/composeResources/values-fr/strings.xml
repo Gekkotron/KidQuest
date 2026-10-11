@@ -42,4 +42,19 @@
     <string name="celebrate_goal">Objectif atteint : %1$s !</string>
     <string name="celebrate_level">%1$s passe au niveau %2$d !</string>
     <string name="celebrate_tap">Touchez pour continuer</string>
+    <string name="settings_children">Enfants</string>
+    <string name="settings_add_child">Ajouter un enfant</string>
+    <string name="settings_archive">Archiver</string>
+    <string name="settings_unarchive">Restaurer</string>
+    <string name="settings_archived">archivé</string>
+    <string name="settings_actions">Actions à points</string>
+    <string name="settings_add_action">Ajouter une action</string>
+    <string name="settings_quick">Boutons rapides</string>
+    <string name="settings_add_quick">Ajouter un bouton rapide</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_lang_system">Système</string>
+    <string name="action_label">Libellé</string>
+    <string name="action_points">Points (− pour une pénalité)</string>
+    <string name="action_edit_title">Action à points</string>
+    <string name="quick_edit_title">Bouton rapide</string>
 </resources>

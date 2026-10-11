@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,7 +33,7 @@ import com.gekkotron.kidquest.resources.ok
 import org.jetbrains.compose.resources.stringResource
 
 private const val DEFAULT_CUSTOM_HUE = 300f
-private const val CUSTOM_SATURATION = 0.9f
+private const val DEFAULT_CUSTOM_SATURATION = 0.9f
 private const val RGB_MASK = 0xFFFFFFL
 
 fun colorHexTag(color: Long): String = (color and RGB_MASK).toString(16).padStart(6, '0').uppercase()
@@ -50,12 +49,13 @@ fun ColorPicker(
 ) {
     var adding by remember { mutableStateOf(false) }
     var hue by remember { mutableFloatStateOf(DEFAULT_CUSTOM_HUE) }
+    var saturation by remember { mutableFloatStateOf(DEFAULT_CUSTOM_SATURATION) }
     val options = if (selected in presets) presets else listOf(selected) + presets
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEach { c ->
                 Column(
-                    Modifier.clickable { onSelect(c) }
+                    Modifier.clickable { onSelect(c); adding = false }
                         .then(if (c == selected) Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier)
                         .testTag("$testTagPrefix-${colorHexTag(c)}")
                 ) { ChildAvatar(avatar = "", color = c, size = 32.dp) }
@@ -69,12 +69,13 @@ fun ColorPicker(
             ) { Text("+", style = MaterialTheme.typography.titleMedium) }
         }
         if (adding) {
-            val picked = Color.hsv(hue, CUSTOM_SATURATION, 1f)
+            val picked = Color.hsv(hue, saturation, 1f)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(Res.string.color_custom), style = MaterialTheme.typography.labelMedium)
-                Slider(
-                    value = hue, onValueChange = { hue = it }, valueRange = 0f..360f,
-                    modifier = Modifier.testTag("$testTagPrefix-hue"),
+                ColorWheel(
+                    hue = hue, saturation = saturation,
+                    onChange = { h, s -> hue = h; saturation = s },
+                    modifier = Modifier.testTag("$testTagPrefix-wheel"),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(32.dp).clip(CircleShape).background(picked))

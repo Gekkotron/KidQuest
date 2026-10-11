@@ -1,10 +1,14 @@
 package com.gekkotron.kidquest.ui.components
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.centerRight
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +32,19 @@ class ColorPickerTest {
         val picked = mutableListOf<Long>()
         setContent { MaterialTheme { ColorPicker(presets, presets[0], { picked += it }, testTagPrefix = "t") } }
         onNodeWithTag("t-add").performClick()
-        onNodeWithTag("t-hue").assertIsDisplayed()
+        onNodeWithTag("t-wheel").assertIsDisplayed()
+        onNodeWithTag("t-custom-ok").performClick()
+        assertEquals(1, picked.size)
+        assertEquals(0xFFL, (picked[0] shr 24) and 0xFFL)
+        assertFalse(picked[0] in presets)
+    }
+
+    @Test
+    fun tappingWheelThenOkPicksOpaqueNonPresetColor() = runComposeUiTest {
+        val picked = mutableListOf<Long>()
+        setContent { MaterialTheme { ColorPicker(presets, presets[0], { picked += it }, testTagPrefix = "t") } }
+        onNodeWithTag("t-add").performClick()
+        onNodeWithTag("t-wheel").performTouchInput { click(Offset(centerRight.x - 10f, centerRight.y)) }
         onNodeWithTag("t-custom-ok").performClick()
         assertEquals(1, picked.size)
         assertEquals(0xFFL, (picked[0] shr 24) and 0xFFL)

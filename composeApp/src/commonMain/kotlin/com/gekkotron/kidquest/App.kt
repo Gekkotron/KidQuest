@@ -30,6 +30,7 @@ import com.gekkotron.kidquest.resources.tab_goals
 import com.gekkotron.kidquest.resources.tab_home
 import com.gekkotron.kidquest.resources.tab_settings
 import com.gekkotron.kidquest.ui.locale.AppEnvironment
+import com.gekkotron.kidquest.ui.celebrate.CelebrationHost
 import com.gekkotron.kidquest.ui.child.ChildDetailScreen
 import com.gekkotron.kidquest.ui.goals.GoalEditScreen
 import com.gekkotron.kidquest.ui.goals.GoalsScreen
@@ -75,6 +76,7 @@ fun App() {
                         }
                     }
                 }
+                CelebrationHost()
             }
         }
     }

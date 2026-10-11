@@ -39,4 +39,7 @@
     <string name="restart_body">Create the same goal again for the same children?</string>
     <string name="restart_yes">Start again</string>
     <string name="restart_no">Not now</string>
+    <string name="celebrate_goal">Goal reached: %1$s!</string>
+    <string name="celebrate_level">%1$s reached level %2$d!</string>
+    <string name="celebrate_tap">Tap to continue</string>
 </resources>

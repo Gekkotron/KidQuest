@@ -39,4 +39,7 @@
     <string name="restart_body">Recréer le même objectif pour les mêmes enfants ?</string>
     <string name="restart_yes">Recommencer</string>
     <string name="restart_no">Plus tard</string>
+    <string name="celebrate_goal">Objectif atteint : %1$s !</string>
+    <string name="celebrate_level">%1$s passe au niveau %2$d !</string>
+    <string name="celebrate_tap">Touchez pour continuer</string>
 </resources>

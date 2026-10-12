@@ -27,7 +27,7 @@ class SettingsViewModelTest {
     @BeforeTest fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         koin = startTestKoin().koin
-        vm = SettingsViewModel(koin.get(), koin.get())
+        vm = SettingsViewModel(koin.get(), koin.get(), koin.get())
     }
     @AfterTest fun tearDown() { stopKoin(); Dispatchers.resetMain() }
 

@@ -65,4 +65,14 @@
     <string name="ok">OK</string>
     <string name="icon_custom">Type or paste an emoji</string>
     <string name="color_custom">Pick a color</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_export">Export data</string>
+    <string name="settings_import">Import data</string>
+    <string name="backup_filename">kidquest-backup-%1$s.json</string>
+    <string name="backup_saved">Backup saved</string>
+    <string name="backup_restored">Backup restored</string>
+    <string name="backup_restore_failed">Could not read this backup</string>
+    <string name="import_confirm_title">Replace current data?</string>
+    <string name="import_confirm_body">This replaces every child, goal and history with the file\'s contents. This cannot be undone.</string>
+    <string name="import_confirm_yes">Replace</string>
 </resources>

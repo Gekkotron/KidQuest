@@ -1,6 +1,7 @@
 package com.gekkotron.kidquest.di
 
 import com.gekkotron.kidquest.data.AppEventBus
+import com.gekkotron.kidquest.data.BackupRepository
 import com.gekkotron.kidquest.data.ChildRepository
 import com.gekkotron.kidquest.data.GoalRepository
 import com.gekkotron.kidquest.data.GoalStatusUpdater
@@ -29,6 +30,7 @@ val dataModule = module {
     single { GoalRepository(get(), get(), get(), get()) }
     single { ChildRepository(get(), get()) { TimeZone.currentSystemDefault() } }
     single { SettingsRepository(get()) }
+    single { BackupRepository(get()) }
 }
 
 /** Each screen task adds its ViewModel here. */
@@ -37,7 +39,7 @@ val viewModelModule = module {
     viewModel { (childId: Long) -> ChildDetailViewModel(childId, get(), get()) }
     viewModelOf(::GoalsViewModel)
     viewModel { (goalId: Long) -> GoalEditViewModel(goalId, get(), get()) }
-    viewModelOf(::SettingsViewModel)
+    viewModel { SettingsViewModel(get(), get(), get()) }
 }
 
 /** [platformModule] must provide the single KidQuestDatabase. */

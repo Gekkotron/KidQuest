@@ -76,7 +76,7 @@ fun App() {
                         composable<GoalEditRoute> { entry ->
                             GoalEditScreen(entry.toRoute<GoalEditRoute>().goalId, onDone = { nav.popBackStack() })
                         }
-                        composable<SettingsRoute> { SettingsScreen() }
+                        composable<SettingsRoute> { SettingsScreen(snackbarHostState) }
                         composable<ChildDetailRoute> { entry ->
                             val route = entry.toRoute<ChildDetailRoute>()
                             ChildDetailScreen(route.childId, onBack = { nav.popBackStack() })

@@ -65,4 +65,14 @@
     <string name="ok">OK</string>
     <string name="icon_custom">Tapez ou collez un emoji</string>
     <string name="color_custom">Choisissez une couleur</string>
+    <string name="settings_data">Données</string>
+    <string name="settings_export">Exporter les données</string>
+    <string name="settings_import">Importer des données</string>
+    <string name="backup_filename">kidquest-sauvegarde-%1$s.json</string>
+    <string name="backup_saved">Sauvegarde enregistrée</string>
+    <string name="backup_restored">Sauvegarde restaurée</string>
+    <string name="backup_restore_failed">Impossible de lire cette sauvegarde</string>
+    <string name="import_confirm_title">Remplacer les données actuelles ?</string>
+    <string name="import_confirm_body">Les enfants, objectifs et historiques actuels seront remplacés par le contenu du fichier. Cette action est irréversible.</string>
+    <string name="import_confirm_yes">Remplacer</string>
 </resources>

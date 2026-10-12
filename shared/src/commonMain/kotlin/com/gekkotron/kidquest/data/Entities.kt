@@ -4,10 +4,12 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
-enum class PointEventType { AWARD, PENALTY, REDEEM }
-enum class GoalStatus { ACTIVE, ACHIEVED, REDEEMED }
+@Serializable enum class PointEventType { AWARD, PENALTY, REDEEM }
+@Serializable enum class GoalStatus { ACTIVE, ACHIEVED, REDEEMED }
 
+@Serializable
 @Entity(tableName = "child")
 data class Child(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -18,6 +20,7 @@ data class Child(
     val archived: Boolean = false,
 )
 
+@Serializable
 @Entity(tableName = "point_action")
 data class PointAction(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -27,6 +30,7 @@ data class PointAction(
     val sortOrder: Int,
 )
 
+@Serializable
 @Entity(tableName = "quick_amount")
 data class QuickAmount(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -35,6 +39,7 @@ data class QuickAmount(
 )
 
 /** Source of truth for every point calculation. Never deleted; undo flips [undone]. */
+@Serializable
 @Entity(tableName = "point_event", indices = [Index("childId"), Index("goalId")])
 data class PointEvent(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -48,6 +53,7 @@ data class PointEvent(
     val undone: Boolean = false,
 )
 
+@Serializable
 @Entity(tableName = "goal")
 data class Goal(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -60,6 +66,7 @@ data class Goal(
     val redeemedAt: Long? = null,
 )
 
+@Serializable
 @Entity(
     tableName = "goal_member",
     primaryKeys = ["goalId", "childId"],
@@ -68,5 +75,6 @@ data class Goal(
 )
 data class GoalMember(val goalId: Long, val childId: Long)
 
+@Serializable
 @Entity(tableName = "app_setting")
 data class AppSetting(@PrimaryKey val key: String, val value: String)

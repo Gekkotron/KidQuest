@@ -2,15 +2,19 @@ package com.gekkotron.kidquest.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gekkotron.kidquest.data.BackupRepository
 import com.gekkotron.kidquest.data.Child
 import com.gekkotron.kidquest.data.ChildRepository
 import com.gekkotron.kidquest.data.PointAction
 import com.gekkotron.kidquest.data.QuickAmount
 import com.gekkotron.kidquest.data.SettingsRepository
 import com.gekkotron.kidquest.data.ThemeMode
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -26,10 +30,20 @@ data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
 )
 
+sealed interface BackupEffect {
+    data class ExportReady(val filename: String, val payload: String) : BackupEffect
+    data object ImportSucceeded : BackupEffect
+    data object ImportFailed : BackupEffect
+}
+
 class SettingsViewModel(
     private val children: ChildRepository,
     private val settings: SettingsRepository,
+    private val backup: BackupRepository,
 ) : ViewModel() {
+
+    private val _effects = Channel<BackupEffect>(Channel.BUFFERED)
+    val effects: Flow<BackupEffect> = _effects.receiveAsFlow()
 
     val state: StateFlow<SettingsUiState> = combine(
         children.observeAll(),
@@ -105,5 +119,16 @@ class SettingsViewModel(
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { settings.setThemeMode(mode) }
+    }
+
+    fun requestExport(filename: String) {
+        viewModelScope.launch { _effects.send(BackupEffect.ExportReady(filename, backup.export())) }
+    }
+
+    fun importFromJson(serialized: String) {
+        viewModelScope.launch {
+            val ok = runCatching { backup.import(serialized) }.isSuccess
+            _effects.send(if (ok) BackupEffect.ImportSucceeded else BackupEffect.ImportFailed)
+        }
     }
 }

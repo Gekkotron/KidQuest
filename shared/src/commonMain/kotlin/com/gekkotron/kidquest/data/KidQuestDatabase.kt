@@ -21,6 +21,7 @@ abstract class KidQuestDatabase : RoomDatabase() {
     abstract fun pointEventDao(): PointEventDao
     abstract fun goalDao(): GoalDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun backupDao(): BackupDao
 }
 
 @Suppress("KotlinNoActualForExpect")

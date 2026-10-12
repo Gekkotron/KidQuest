@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,7 +34,14 @@ import com.gekkotron.kidquest.data.PointAction
 import com.gekkotron.kidquest.data.QuickAmount
 import com.gekkotron.kidquest.data.ThemeMode
 import com.gekkotron.kidquest.resources.Res
+import com.gekkotron.kidquest.resources.backup_filename
+import com.gekkotron.kidquest.resources.backup_restored
+import com.gekkotron.kidquest.resources.backup_restore_failed
+import com.gekkotron.kidquest.resources.cancel
 import com.gekkotron.kidquest.resources.delete
+import com.gekkotron.kidquest.resources.import_confirm_body
+import com.gekkotron.kidquest.resources.import_confirm_title
+import com.gekkotron.kidquest.resources.import_confirm_yes
 import com.gekkotron.kidquest.resources.settings_actions
 import com.gekkotron.kidquest.resources.settings_add_action
 import com.gekkotron.kidquest.resources.settings_add_child
@@ -40,6 +50,9 @@ import com.gekkotron.kidquest.resources.settings_appearance
 import com.gekkotron.kidquest.resources.settings_archive
 import com.gekkotron.kidquest.resources.settings_archived
 import com.gekkotron.kidquest.resources.settings_children
+import com.gekkotron.kidquest.resources.settings_data
+import com.gekkotron.kidquest.resources.settings_export
+import com.gekkotron.kidquest.resources.settings_import
 import com.gekkotron.kidquest.resources.settings_lang_system
 import com.gekkotron.kidquest.resources.settings_language
 import com.gekkotron.kidquest.resources.settings_quick
@@ -50,9 +63,13 @@ import com.gekkotron.kidquest.resources.settings_unarchive
 import com.gekkotron.kidquest.ui.components.ChildAvatar
 import com.gekkotron.kidquest.ui.components.ChildEditDialog
 import com.gekkotron.kidquest.ui.components.formatSigned
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
 
 private sealed interface Editing {
     data class ChildEdit(val child: Child?) : Editing
@@ -61,9 +78,23 @@ private sealed interface Editing {
 }
 
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
+fun SettingsScreen(snackbarHostState: SnackbarHostState, vm: SettingsViewModel = koinViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Editing?>(null) }
+    var pendingImport by remember { mutableStateOf<String?>(null) }
+
+    val exportLauncher = rememberBackupExport()
+    val importLauncher = rememberBackupImport { pendingImport = it }
+
+    LaunchedEffect(vm) {
+        vm.effects.collect { effect ->
+            when (effect) {
+                is BackupEffect.ExportReady -> exportLauncher(effect.filename, effect.payload)
+                BackupEffect.ImportSucceeded -> snackbarHostState.showSnackbar(getString(Res.string.backup_restored))
+                BackupEffect.ImportFailed -> snackbarHostState.showSnackbar(getString(Res.string.backup_restore_failed))
+            }
+        }
+    }
 
     LazyColumn(Modifier.fillMaxSize().testTag("screen-settings"), contentPadding = PaddingValues(bottom = 24.dp)) {
         item { Header(Res.string.settings_children) }
@@ -116,6 +147,19 @@ fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
             LanguageOption(stringResource(Res.string.settings_theme_light), s.themeMode == ThemeMode.LIGHT, "theme-light") { vm.setThemeMode(ThemeMode.LIGHT) }
             LanguageOption(stringResource(Res.string.settings_theme_dark), s.themeMode == ThemeMode.DARK, "theme-dark") { vm.setThemeMode(ThemeMode.DARK) }
         }
+
+        item { HorizontalDivider(); Header(Res.string.settings_data) }
+        item {
+            val filenameFmt = stringResource(Res.string.backup_filename, today())
+            ListItem(
+                headlineContent = { Text(stringResource(Res.string.settings_export)) },
+                modifier = Modifier.clickable { vm.requestExport(filenameFmt) }.testTag("settings-export"),
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(Res.string.settings_import)) },
+                modifier = Modifier.clickable { importLauncher() }.testTag("settings-import"),
+            )
+        }
     }
 
     when (val e = editing) {
@@ -133,7 +177,26 @@ fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
         }
         null -> Unit
     }
+
+    pendingImport?.let { payload ->
+        AlertDialog(
+            onDismissRequest = { pendingImport = null },
+            title = { Text(stringResource(Res.string.import_confirm_title)) },
+            text = { Text(stringResource(Res.string.import_confirm_body)) },
+            confirmButton = {
+                TextButton(onClick = { vm.importFromJson(payload); pendingImport = null }, modifier = Modifier.testTag("import-confirm")) {
+                    Text(stringResource(Res.string.import_confirm_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingImport = null }) { Text(stringResource(Res.string.cancel)) }
+            },
+        )
+    }
 }
+
+private fun today(): String =
+    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
 
 @Composable
 private fun Header(title: StringResource) {

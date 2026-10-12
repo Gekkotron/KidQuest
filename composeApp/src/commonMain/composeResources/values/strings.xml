@@ -54,6 +54,10 @@
     <string name="settings_add_quick">Add a quick button</string>
     <string name="settings_language">Language</string>
     <string name="settings_lang_system">System</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
     <string name="action_label">Label</string>
     <string name="action_points">Points (use − for a penalty)</string>
     <string name="action_edit_title">Point action</string>

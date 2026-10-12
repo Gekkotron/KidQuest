@@ -1,5 +1,6 @@
 package com.gekkotron.kidquest.ui.settings
 
+import com.gekkotron.kidquest.data.ThemeMode
 import com.gekkotron.kidquest.startTestKoin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -57,6 +58,17 @@ class SettingsViewModelTest {
         val added = vm.state.first { it.quickAmounts.size == 5 }.quickAmounts.last()
         assertTrue(vm.updateQuickAmount(added, "-5"))
         assertEquals(-5, vm.state.first { s -> s.quickAmounts.last().points == -5 }.quickAmounts.last().points)
+    }
+
+    @Test
+    fun themeModeDefaultsToSystemAndPersistsSelection() = runTest {
+        assertEquals(ThemeMode.SYSTEM, vm.state.first().themeMode)
+        vm.setThemeMode(ThemeMode.DARK)
+        assertEquals(ThemeMode.DARK, vm.state.first { it.themeMode == ThemeMode.DARK }.themeMode)
+        vm.setThemeMode(ThemeMode.LIGHT)
+        assertEquals(ThemeMode.LIGHT, vm.state.first { it.themeMode == ThemeMode.LIGHT }.themeMode)
+        vm.setThemeMode(ThemeMode.SYSTEM)
+        assertEquals(ThemeMode.SYSTEM, vm.state.first { it.themeMode == ThemeMode.SYSTEM }.themeMode)
     }
 
     @Test

@@ -6,6 +6,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.gekkotron.kidquest.data.ThemeMode
 
 private val Light = lightColorScheme(
     primary = Color(0xFF6750A4), secondary = Color(0xFFFF8A00), tertiary = Color(0xFF00A884),
@@ -17,6 +18,11 @@ private val Dark = darkColorScheme(
 )
 
 @Composable
-fun KidQuestTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) Dark else Light, content = content)
+fun KidQuestTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
+    val dark = when (themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+    MaterialTheme(colorScheme = if (dark) Dark else Light, content = content)
 }

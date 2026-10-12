@@ -7,6 +7,7 @@ import com.gekkotron.kidquest.data.ChildRepository
 import com.gekkotron.kidquest.data.PointAction
 import com.gekkotron.kidquest.data.QuickAmount
 import com.gekkotron.kidquest.data.SettingsRepository
+import com.gekkotron.kidquest.data.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -22,6 +23,7 @@ data class SettingsUiState(
     val actions: List<PointAction> = emptyList(),
     val quickAmounts: List<QuickAmount> = emptyList(),
     val language: String? = null,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
 )
 
 class SettingsViewModel(
@@ -30,9 +32,14 @@ class SettingsViewModel(
 ) : ViewModel() {
 
     val state: StateFlow<SettingsUiState> = combine(
-        children.observeAll(), settings.observeActions(), settings.observeQuickAmounts(), settings.observeLanguage(),
-    ) { kids, actions, quick, lang -> SettingsUiState(kids, actions, quick, lang) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())
+        children.observeAll(),
+        settings.observeActions(),
+        settings.observeQuickAmounts(),
+        settings.observeLanguage(),
+        settings.observeThemeMode(),
+    ) { kids, actions, quick, lang, theme ->
+        SettingsUiState(kids, actions, quick, lang, theme)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())
 
     fun addChild(name: String, avatar: String, color: Long): Boolean {
         if (name.isBlank()) return false
@@ -94,5 +101,9 @@ class SettingsViewModel(
 
     fun setLanguage(tag: String?) {
         viewModelScope.launch { settings.setLanguage(tag) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { settings.setThemeMode(mode) }
     }
 }

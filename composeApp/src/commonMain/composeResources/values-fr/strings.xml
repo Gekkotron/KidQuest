@@ -54,6 +54,10 @@
     <string name="settings_add_quick">Ajouter un bouton rapide</string>
     <string name="settings_language">Langue</string>
     <string name="settings_lang_system">Système</string>
+    <string name="settings_appearance">Apparence</string>
+    <string name="settings_theme_system">Système</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
     <string name="action_label">Libellé</string>
     <string name="action_points">Points (− pour une pénalité)</string>
     <string name="action_edit_title">Action à points</string>

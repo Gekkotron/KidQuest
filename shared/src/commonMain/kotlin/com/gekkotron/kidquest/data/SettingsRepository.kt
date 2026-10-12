@@ -1,6 +1,7 @@
 package com.gekkotron.kidquest.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class SettingsRepository(private val db: KidQuestDatabase) {
     private val dao = db.settingsDao()
@@ -54,6 +55,15 @@ class SettingsRepository(private val db: KidQuestDatabase) {
         if (tag == null) dao.removeSetting(KEY_LANGUAGE) else dao.putSetting(AppSetting(KEY_LANGUAGE, tag))
     }
 
+    /** Defaults to [ThemeMode.SYSTEM] when unset. */
+    fun observeThemeMode(): Flow<ThemeMode> =
+        dao.observeSetting(KEY_THEME_MODE).map(ThemeMode::fromStorage)
+
+    suspend fun setThemeMode(mode: ThemeMode) {
+        if (mode == ThemeMode.SYSTEM) dao.removeSetting(KEY_THEME_MODE)
+        else dao.putSetting(AppSetting(KEY_THEME_MODE, mode.name))
+    }
+
     private fun <T> swapped(items: List<T>, id: Long, up: Boolean, idOf: (T) -> Long): List<T>? {
         val index = items.indexOfFirst { idOf(it) == id }
         val target = if (up) index - 1 else index + 1
@@ -63,5 +73,6 @@ class SettingsRepository(private val db: KidQuestDatabase) {
 
     private companion object {
         const val KEY_LANGUAGE = "language"
+        const val KEY_THEME_MODE = "theme_mode"
     }
 }

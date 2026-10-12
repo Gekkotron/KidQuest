@@ -29,18 +29,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gekkotron.kidquest.data.Child
 import com.gekkotron.kidquest.data.PointAction
 import com.gekkotron.kidquest.data.QuickAmount
+import com.gekkotron.kidquest.data.ThemeMode
 import com.gekkotron.kidquest.resources.Res
 import com.gekkotron.kidquest.resources.delete
 import com.gekkotron.kidquest.resources.settings_actions
 import com.gekkotron.kidquest.resources.settings_add_action
 import com.gekkotron.kidquest.resources.settings_add_child
 import com.gekkotron.kidquest.resources.settings_add_quick
+import com.gekkotron.kidquest.resources.settings_appearance
 import com.gekkotron.kidquest.resources.settings_archive
 import com.gekkotron.kidquest.resources.settings_archived
 import com.gekkotron.kidquest.resources.settings_children
 import com.gekkotron.kidquest.resources.settings_lang_system
 import com.gekkotron.kidquest.resources.settings_language
 import com.gekkotron.kidquest.resources.settings_quick
+import com.gekkotron.kidquest.resources.settings_theme_dark
+import com.gekkotron.kidquest.resources.settings_theme_light
+import com.gekkotron.kidquest.resources.settings_theme_system
 import com.gekkotron.kidquest.resources.settings_unarchive
 import com.gekkotron.kidquest.ui.components.ChildAvatar
 import com.gekkotron.kidquest.ui.components.ChildEditDialog
@@ -103,6 +108,13 @@ fun SettingsScreen(vm: SettingsViewModel = koinViewModel()) {
             LanguageOption(stringResource(Res.string.settings_lang_system), s.language == null, "lang-system") { vm.setLanguage(null) }
             LanguageOption("Français", s.language == "fr", "lang-fr") { vm.setLanguage("fr") }
             LanguageOption("English", s.language == "en", "lang-en") { vm.setLanguage("en") }
+        }
+
+        item { HorizontalDivider(); Header(Res.string.settings_appearance) }
+        item {
+            LanguageOption(stringResource(Res.string.settings_theme_system), s.themeMode == ThemeMode.SYSTEM, "theme-system") { vm.setThemeMode(ThemeMode.SYSTEM) }
+            LanguageOption(stringResource(Res.string.settings_theme_light), s.themeMode == ThemeMode.LIGHT, "theme-light") { vm.setThemeMode(ThemeMode.LIGHT) }
+            LanguageOption(stringResource(Res.string.settings_theme_dark), s.themeMode == ThemeMode.DARK, "theme-dark") { vm.setThemeMode(ThemeMode.DARK) }
         }
     }
 

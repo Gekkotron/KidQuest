@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.gekkotron.kidquest.data.GoalRepository
 import com.gekkotron.kidquest.data.SettingsRepository
+import com.gekkotron.kidquest.data.ThemeMode
 import com.gekkotron.kidquest.resources.Res
 import com.gekkotron.kidquest.resources.tab_goals
 import com.gekkotron.kidquest.resources.tab_home
@@ -55,8 +56,9 @@ fun App() {
     val goals = koinInject<GoalRepository>()
     LaunchedEffect(Unit) { goals.reevaluateOpenGoals() }
     val language by settings.observeLanguage().collectAsStateWithLifecycle(initialValue = null)
+    val themeMode by settings.observeThemeMode().collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
     AppEnvironment(language) {
-        KidQuestTheme {
+        KidQuestTheme(themeMode) {
             val nav = rememberNavController()
             val snackbarHostState = remember { SnackbarHostState() }
             Box(Modifier.fillMaxSize()) {

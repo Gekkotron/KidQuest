@@ -188,8 +188,9 @@ private fun ChildCardView(
                 )
             }
             card.closestGoal?.let { g ->
+                val mine = g.memberProgress.first { it.childId == s.child.id }
                 Text("${g.goal.icon} ${g.goal.title}", style = MaterialTheme.typography.labelMedium)
-                GoalProgressBar(g.progress)
+                GoalProgressBar(mine.progress)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 quickAmounts.forEach { q ->

@@ -42,6 +42,12 @@ GitHub Actions (`.github/workflows/ci.yml`) runs JVM and iOS tests on every push
 - Secret `FIREBASE_SERVICE_ACCOUNT` — the full JSON content of a service account with the *Firebase App Distribution Admin* role.
 - Optional variable `FIREBASE_TESTER_GROUPS` — comma-separated group aliases (defaults to `testers`).
 
+### App icon
+
+The tester-facing icon in Firebase App Distribution (invite email, AppTester mobile app, release listing) is auto-extracted from the APK's launcher mipmaps in `androidApp/src/main/res/mipmap-*/`, so it ships automatically with each release.
+
+The project-level icon in the Firebase Console (Project Settings → General → Your apps → Android app) has no CLI/API — upload it manually once from `docs/branding/kidquest-icon-512.png`.
+
 ### Release signing
 
 Generate a release keystore once (keep it safe — losing it means losing the ability to publish updates to the same install):

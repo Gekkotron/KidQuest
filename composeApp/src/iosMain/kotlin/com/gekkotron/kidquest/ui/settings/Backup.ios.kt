@@ -43,7 +43,7 @@ actual fun rememberBackupImport(onPicked: (text: String) -> Unit): () -> Unit {
                 val accessed = url.startAccessingSecurityScopedResource()
                 try {
                     val text = NSString.create(contentsOfURL = url, encoding = NSUTF8StringEncoding, error = null)
-                    if (text != null) onPicked(text)
+                    if (text != null) onPicked(text.toString())
                 } finally {
                     if (accessed) url.stopAccessingSecurityScopedResource()
                 }

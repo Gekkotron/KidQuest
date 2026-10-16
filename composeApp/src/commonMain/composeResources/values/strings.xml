@@ -20,6 +20,7 @@
     <string name="child_lifetime">Earned in total: %1$d</string>
     <string name="child_streak">🔥 %1$d-day streak</string>
     <string name="child_history">History</string>
+    <string name="child_chart_title">Last %1$d days</string>
     <string name="child_restore">Restore</string>
     <string name="child_redeemed">🎁 %1$s</string>
     <string name="back">Back</string>
